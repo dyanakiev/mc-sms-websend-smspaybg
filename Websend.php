@@ -19,7 +19,7 @@
 			$this->port = $port;
 		}
 
-		/**
+		/** 
 		* Connects to a Websend server.
         * Returns true if successful.
 		*/
