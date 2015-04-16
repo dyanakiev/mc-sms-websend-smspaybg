@@ -1,0 +1,4 @@
+PASS=999988
+URL=http://php-example-for-websend-and-minecraft-server-with-mobio.bg.dimitar.website
+WEBLISTENER_ACTIVE=true
+ALTPORT=6985
