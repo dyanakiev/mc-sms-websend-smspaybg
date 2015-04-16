@@ -20,31 +20,16 @@ $siteNavTextTitle = "Сайт име"; //Текста на шапката
 
 //---/
 
-$servID = 26130; //ID на услуга от Mobio.bg
+define ('USER_ID', 4603); // Попълнете вашия потр. код за smspay
+$service_id = "7005";//Номер на услугата oт smspay
 
 $smsSendInfo = "Изпрати смс на номер 0000 с текст TXTTT на цена 6.00лв с ДДС!"; //Информация за изпращане на смс-а
 
-//Функция за връзка с mobio.bg
-function mobio_checkcode($servID, $code, $debug=0) {
-	
-	$res_lines = file("http://www.mobio.bg/code/checkcode.php?servID=$servID&code=$code");
-	
-	$ret = 0;
-	if($res_lines) {
-		
-		if(strstr("PAYBG=OK", $res_lines[0])) {
-			$ret = 1;
-			}else{
-			if($debug)
-			echo $line."\n";
-		}
-		}else{
-		if($debug)
-		echo "Unable to connect to mobio.bg server.\n";
-		$ret = 0;
-	}
-	
-	return $ret;
+//Функция за връзка с smspay
+function smspay_check_code ($user_id, $service_id, $code) {
+   $url = sprintf ("http://rcv.smspay.bg/users/check_code.php?" .
+   "user_id=%d&service_id=%d&code=%s", $user_id, $service_id, $code);
+   return @file_get_contents ($url);
 }
 
 //Заявката
@@ -59,7 +44,7 @@ if(isset($_POST['submit']))
 		 {
 		$errormsg = '<div class="alert alert-danger" role="alert">Попълнете всички полета!</div>'; //Ако полетата са празни изписва това.
 		 }else{
-		 	 if(mobio_checkcode($servID, $code, 0) == 1) {
+		 	 if(smspay_check_code (USER_ID, $service_id, $code) ==1) {
 				$ws->doCommandAsConsole("pex user $playername group set $usergroup"); //Съответно ако искаш за един месец можеш да видиш в wiki-то на pex за lifetime
 				$ws->doCommandAsConsole("say $playername buy $usergroup");
         		$ws->disconnect();
