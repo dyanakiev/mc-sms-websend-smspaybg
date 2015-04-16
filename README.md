@@ -14,6 +14,7 @@ Demo: http://php-example-for-websend-and-minecraft-server-with-smspay.dimitar.we
 
 *Проверява се кода от smspay...
 
+- Отпушете порт 6985
 
 Моля прегледайте всички файлове и редактирайте каквото е нужно!
 
