@@ -20,7 +20,7 @@ $siteNavTextTitle = "Сайт име"; //Текста на шапката
 
 //---/
 
-define ('USER_ID', 4601); // Попълнете вашия потр. код за smspay
+define ('USER_ID', 4601);  // Попълнете вашия потр. код за smspay
 $service_id = "7001";//Номер на услугата oт smspay
 
 $smsSendInfo = "Изпрати смс на номер 0000 с текст TXTTT на цена 6.00лв с ДДС!"; //Информация за изпращане на смс-а
@@ -44,14 +44,26 @@ if(isset($_POST['submit']))
 		 {
 		$errormsg = '<div class="alert alert-danger" role="alert">Попълнете всички полета!</div>'; //Ако полетата са празни изписва това.
 		 }else{
-		 	 if(smspay_check_code (USER_ID, $service_id, $code) ==1) {
-				$ws->doCommandAsConsole("pex user $playername group set $usergroup"); //Съответно ако искаш за един месец можеш да видиш в wiki-то на pex за lifetime
-				$ws->doCommandAsConsole("say $playername buy $usergroup");
-        		$ws->disconnect();
-				$errormsg = '<div class="alert alert-success" role="alert">Честито <font color="black">('.$playername.')</font> групата <font color="orange">('.$usergroup.')</font> е активирана!</div>'; //Активирана група...
-			}else{
-				$errormsg = '<div class="alert alert-danger" role="alert">СМС КОДА Е ГРЕШЕН! Опитай отново!</div>'; //Ако кода е грешен изписва това.
-			}
+		 if ($_REQUEST{'but_check'}) { //smspay
+		      unset ($_SESSION{'loggedin'});
+		   switch (smspay_check_code (USER_ID, $service_id, $code)) {
+         case 'CODE_OK':
+           	$ws->doCommandAsConsole("pex user $playername group set $usergroup"); //Съответно ако искаш за един месец можеш да видиш в wiki-то на pex за lifetime
+		$ws->doCommandAsConsole("say $playername buy $usergroup");
+        	$ws->disconnect();
+        	$errormsg = '<div class="alert alert-success" role="alert">Честито <font color="black">('.$playername.')</font> групата <font color="orange">('.$usergroup.')</font> е активирана!</div>'; //Активирана група...
+            $_SESSION{'loggedin'} = true; 
+         break;
+
+         case 'CODE_EXPIRED':
+	$errormsg = '<div class="alert alert-danger" role="alert">СМС КОДА Е ГРЕШЕН! Опитай отново!</div>'; //Ако кода е грешен изписва това.
+         break;
+
+         case 'CODE_NOT_FOUND':
+		$errormsg = '<div class="alert alert-danger" role="alert">СМС КОДА Е ГРЕШЕН! Опитай отново!</div>'; //Ако кода е грешен изписва това.
+	    break;
+	  }
+   	}
 		 }
 	}else{
 		$errormsg = '<div class="alert alert-danger" role="alert">Сървъра е офлайн, моля ела отново когато е пуснат!</div>'; //Ако сървъра е спрян изписва това..
