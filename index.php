@@ -20,16 +20,27 @@ $siteNavTextTitle = "Сайт име"; //Текста на шапката
 
 //---/
 
-define ('USER_ID', 4601);  // Попълнете вашия потр. код за smspay
-$service_id = "7001";//Номер на услугата oт smspay
+$userid = '10'; //UserID-то на вашия SMSPAY акаунт
+$servid = '4328'; //ID на услугата
 
 $smsSendInfo = "Изпрати смс на номер 0000 с текст TXTTT на цена 6.00лв с ДДС!"; //Информация за изпращане на смс-а
 
-//Функция за връзка с smspay
+//Функция за проверка на SMSPAY Code
 function smspay_check_code ($user_id, $service_id, $code) {
    $url = sprintf ("http://rcv.smspay.bg/users/check_code.php?" .
    "user_id=%d&service_id=%d&code=%s", $user_id, $service_id, $code);
    return @file_get_contents ($url);
+
+   // Ако не е разрешено file_get_contents, използвайте този код:
+   $host = 'rcv.smspay.bg';
+   $path = sprintf ("/users/check_code.php?service_id=%d&code=%s" .
+      "&user_id=%d", $service_id, $code, $user_id);
+   $request = sprintf ("GET %s HTTP/1.0\r\nHost: %s\r\n\r\n",
+      $path, $host);
+   $socket = fsockopen ($host, 80);
+   fwrite ($socket, $request);
+   $result = fread ($socket, 512);
+   return $result;
 }
 
 //Заявката
@@ -44,26 +55,21 @@ if(isset($_POST['submit']))
 		 {
 		$errormsg = '<div class="alert alert-danger" role="alert">Попълнете всички полета!</div>'; //Ако полетата са празни изписва това.
 		 }else{
-		 if ($_REQUEST{'but_check'}) { //smspay
-		      unset ($_SESSION{'loggedin'});
-		   switch (smspay_check_code (USER_ID, $service_id, $code)) {
-         case 'CODE_OK':
-           	$ws->doCommandAsConsole("pex user $playername group set $usergroup"); //Съответно ако искаш за един месец можеш да видиш в wiki-то на pex за lifetime
-		$ws->doCommandAsConsole("say $playername buy $usergroup");
-        	$ws->disconnect();
-        	$errormsg = '<div class="alert alert-success" role="alert">Честито <font color="black">('.$playername.')</font> групата <font color="orange">('.$usergroup.')</font> е активирана!</div>'; //Активирана група...
-            $_SESSION{'loggedin'} = true; 
-         break;
+		 		switch (smspay_check_code($userid, $servid, $code)) {
+        case 'CODE_OK':
+				$ws->doCommandAsConsole("pex user $playername group set $usergroup"); //Съответно ако искаш за един месец можеш да видиш в wiki-то на pex за lifetime
+				$ws->doCommandAsConsole("say $playername buy $usergroup");
+        		$ws->disconnect();
+				$errormsg = "<div class=\"alert alert-success\" role=\"alert\">Честито <font color=\"black\">('.$playername.')</font> групата <font color=\"orange\">('.$usergroup.')</font> е активирана!</div>"; //Активирана група...
+            break;
+        case 'CODE_EXPIRED':
+			$errormsg = "<div class=\"alert alert-danger\" role=\"alert\">СМС КОДА Е ГРЕШЕН! Опитай отново!</div>"; //Ако кода е грешен изписва това.
+            break;
 
-         case 'CODE_EXPIRED':
-	$errormsg = '<div class="alert alert-danger" role="alert">СМС КОДА Е ГРЕШЕН! Опитай отново!</div>'; //Ако кода е грешен изписва това.
-         break;
-
-         case 'CODE_NOT_FOUND':
-		$errormsg = '<div class="alert alert-danger" role="alert">СМС КОДА Е ГРЕШЕН! Опитай отново!</div>'; //Ако кода е грешен изписва това.
-	    break;
-	  }
-   	}
+        case 'CODE_NOT_FOUND':
+			$errormsg = "<div class=\"alert alert-danger\" role=\"alert\">СМС КОДА Е ГРЕШЕН! Опитай отново!</div>"; //Ако кода е грешен изписва това.
+            break;
+			}
 		 }
 	}else{
 		$errormsg = '<div class="alert alert-danger" role="alert">Сървъра е офлайн, моля ела отново когато е пуснат!</div>'; //Ако сървъра е спрян изписва това..
@@ -148,7 +154,7 @@ if(isset($_POST['submit']))
       </div>
 
       <footer class="footer">
-        <p>&copy; <a href="https://github.com/TheEVIL">TheEVIL</a><span style="float:right;"><?php $mtime = explode(' ', microtime());$totaltime = $mtime[0] + $mtime[1] - $starttime;printf('Страницата се генерира за %.3f секунди.', $totaltime); //показваме микротаймера?></span></p>
+        <p>&copy; <a href="https://github.com/TheEVILbg">TheEVIL</a><span style="float:right;"><?php $mtime = explode(' ', microtime());$totaltime = $mtime[0] + $mtime[1] - $starttime;printf('Страницата се генерира за %.3f секунди.', $totaltime); //показваме микротаймера?></span></p>
       </footer>
 
     </div> <!-- /container -->
