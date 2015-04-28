@@ -1,81 +1,88 @@
 <?php
 date_default_timezone_set('Europe/Sofia'); //Задаваме времева зона
-$starttime = explode(' ', microtime());		//Стартираме
-$starttime = $starttime[1] + $starttime[0];	//Микротаймера
+$starttime = explode(' ', microtime()); //Стартираме
+$starttime = $starttime[1] + $starttime[0]; //Микротаймера
 
-//Websend настройки
-include_once 'Websend.php';//Websend api
-$ws = new Websend("0.0.0.0");//IP на сървъра 
-$ws->password = "999988";//Паролата от config файла на сървъра
+// Websend настройки
 
+include_once 'Websend.php';
 
+ // Websend api
+
+$ws = new Websend("0.0.0.0"); //IP на сървъра
+$ws->password = "999988"; //Паролата от config файла на сървъра
 $errormsg = '';
 
-//Настройки
+// Настройки
+
 $siteTitle = "Сайт име"; //Име на сайта
-
 $siteDescription = "Сайт описание"; //Description
-
 $siteNavTextTitle = "Сайт име"; //Текста на шапката
 
-//---/
+// ---/
 
 $userid = '**'; //UserID-то на вашия SMSPAY акаунт
 $servid = '****'; //ID на услугата
-
 $smsSendInfo = "Изпрати смс на номер 0000 с текст TXTTT на цена 6.00лв с ДДС!"; //Информация за изпращане на смс-а
 
-//Функция за проверка на SMSPAY Code
-function smspay_check_code ($user_id, $service_id, $code) {
-   $url = sprintf ("http://rcv.smspay.bg/users/check_code.php?" .
-   "user_id=%d&service_id=%d&code=%s", $user_id, $service_id, $code);
-   return @file_get_contents ($url);
+// Функция за проверка на SMSPAY Code
 
-   // Ако не е разрешено file_get_contents, използвайте този код:
-   $host = 'rcv.smspay.bg';
-   $path = sprintf ("/users/check_code.php?service_id=%d&code=%s" .
-      "&user_id=%d", $service_id, $code, $user_id);
-   $request = sprintf ("GET %s HTTP/1.0\r\nHost: %s\r\n\r\n",
-      $path, $host);
-   $socket = fsockopen ($host, 80);
-   fwrite ($socket, $request);
-   $result = fread ($socket, 512);
-   return $result;
+function smspay_check_code($user_id, $service_id, $code)
+{
+	$url = sprintf("http://rcv.smspay.bg/users/check_code.php?" . "user_id=%d&service_id=%d&code=%s", $user_id, $service_id, $code);
+	return @file_get_contents($url);
+
+	// Ако не е разрешено file_get_contents, използвайте този код:
+
+	$host = 'rcv.smspay.bg';
+	$path = sprintf("/users/check_code.php?service_id=%d&code=%s" . "&user_id=%d", $service_id, $code, $user_id);
+	$request = sprintf("GET %s HTTP/1.0\r\nHost: %s\r\n\r\n", $path, $host);
+	$socket = fsockopen($host, 80);
+	fwrite($socket, $request);
+	$result = fread($socket, 512);
+	return $result;
 }
 
-//Заявката
-if(isset($_POST['submit']))
+// Заявката
+
+if (isset($_POST['submit']))
 {
 	$code = htmlspecialchars(addslashes(trim($_POST['code'])));
 	$playername = htmlspecialchars(addslashes($_POST['playername']));
 	$usergroup = htmlspecialchars(addslashes($_POST['usergroup']));
-	
-	if($ws->connect()){ //проверяваме дали сървъра е пуснат...
-		 if($playername==NULL | $code==NULL )
-		 {
-		$errormsg = '<div class="alert alert-danger" role="alert">Попълнете всички полета!</div>'; //Ако полетата са празни изписва това.
-		 }else{
-		 		switch (smspay_check_code($userid, $servid, $code)) {
-        case 'CODE_OK':
+	if ($ws->connect())
+	{ //проверяваме дали сървъра е пуснат...
+		if ($playername == NULL | $code == NULL)
+		{
+			$errormsg = '<div class="alert alert-danger" role="alert">Попълнете всички полета!</div>'; //Ако полетата са празни изписва това.
+		}
+		else
+		{
+			switch (smspay_check_code($userid, $servid, $code))
+			{
+			case 'CODE_OK':
 				$ws->doCommandAsConsole("pex user $playername group set $usergroup"); //Съответно ако искаш за един месец можеш да видиш в wiki-то на pex за lifetime
 				$ws->doCommandAsConsole("say $playername buy $usergroup");
-        		$ws->disconnect();
+				$ws->disconnect();
 				$errormsg = "<div class=\"alert alert-success\" role=\"alert\">Честито <font color=\"black\">('.$playername.')</font> групата <font color=\"orange\">('.$usergroup.')</font> е активирана!</div>"; //Активирана група...
-            break;
-        case 'CODE_EXPIRED':
-			$errormsg = "<div class=\"alert alert-danger\" role=\"alert\">СМС КОДА Е ГРЕШЕН! Опитай отново!</div>"; //Ако кода е грешен изписва това.
-            break;
+				break;
 
-        case 'CODE_NOT_FOUND':
-			$errormsg = "<div class=\"alert alert-danger\" role=\"alert\">СМС КОДА Е ГРЕШЕН! Опитай отново!</div>"; //Ако кода е грешен изписва това.
-            break;
+			case 'CODE_EXPIRED':
+				$errormsg = "<div class=\"alert alert-danger\" role=\"alert\">СМС КОДА Е ГРЕШЕН! Опитай отново!</div>"; //Ако кода е грешен изписва това.
+				break;
+
+			case 'CODE_NOT_FOUND':
+				$errormsg = "<div class=\"alert alert-danger\" role=\"alert\">СМС КОДА Е ГРЕШЕН! Опитай отново!</div>"; //Ако кода е грешен изписва това.
+				break;
 			}
-		 }
-	}else{
+		}
+	}
+	else
+	{
 		$errormsg = '<div class="alert alert-danger" role="alert">Сървъра е офлайн, моля ела отново когато е пуснат!</div>'; //Ако сървъра е спрян изписва това..
-    }
-
+	}
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="bg">
