@@ -2,10 +2,6 @@
 
 Demo: http://php-example-for-websend-and-minecraft-server-with-smspay.dimitar.website
 
--- Не се знае дали работи.. --
-
--- Версията с mobio работи на 101% -- 
-
 *Използва се websend
 
 *Проверява се дали сървъра е пуснат
