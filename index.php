@@ -161,7 +161,7 @@ if (isset($_POST['submit']))
       </div>
 
       <footer class="footer">
-        <p>&copy; <a href="https://github.com/TheEVILbg">TheEVIL</a><span style="float:right;"><?php $mtime = explode(' ', microtime());$totaltime = $mtime[0] + $mtime[1] - $starttime;printf('Страницата се генерира за %.3f секунди.', $totaltime); //показваме микротаймера?></span></p>
+        <p>&copy; <a href="https://github.com/TheEVIL">TheEVIL</a><span style="float:right;"><?php $mtime = explode(' ', microtime());$totaltime = $mtime[0] + $mtime[1] - $starttime;printf('Страницата се генерира за %.3f секунди.', $totaltime); //показваме микротаймера?></span></p>
       </footer>
 
     </div> <!-- /container -->
