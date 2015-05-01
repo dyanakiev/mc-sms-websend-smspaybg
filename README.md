@@ -1,7 +1,5 @@
 # Смс система с smspay и websend
 
-Demo: http://php-example-for-websend-and-minecraft-server-with-smspay.dimitar.website
-
 *Използва се websend
 
 *Проверява се дали сървъра е пуснат
